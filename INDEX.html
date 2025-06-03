@@ -1,0 +1,114 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Birthday Jump Game</title>
+  <style>
+    body { margin: 0; overflow: hidden; background: #f0f8ff; font-family: sans-serif; }
+    canvas { display: block; margin: 0 auto; background: #87ceeb; }
+    #message {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: white;
+      padding: 20px;
+      border: 2px solid black;
+      display: none;
+      font-size: 1.2em;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+<canvas id="gameCanvas" width="600" height="200"></canvas>
+<div id="message">Congrats! You’ve cleared the game. Here's your next clue:<br>
+<em>“Solve this: I’m cold, I’m dark, I store your junk—but in a storm, I’m behind your car’s bunk with hinges.”</em></div>
+<script>
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
+
+let player = { x: 50, y: 150, width: 20, height: 20, vy: 0, onGround: true };
+let gravity = 0.8;
+let obstacles = [];
+let gameSpeed = 4;
+let frame = 0;
+let score = 0;
+let gameOver = false;
+const maxScore = 5;
+
+function jump() {
+  if (player.onGround) {
+    player.vy = -12;
+    player.onGround = false;
+  }
+}
+
+document.addEventListener('keydown', (e) => { if (e.code === 'Space') jump(); });
+document.addEventListener('click', jump);
+
+function update() {
+  frame++;
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  // Player physics
+  player.vy += gravity;
+  player.y += player.vy;
+  if (player.y >= 150) {
+    player.y = 150;
+    player.vy = 0;
+    player.onGround = true;
+  }
+
+  // Draw player
+  ctx.fillStyle = 'black';
+  ctx.fillRect(player.x, player.y, player.width, player.height);
+
+  // Generate obstacles
+  if (frame % 90 === 0) {
+    obstacles.push({ x: canvas.width, width: 20, height: 20 });
+  }
+
+  // Update and draw obstacles
+  for (let i = 0; i < obstacles.length; i++) {
+    obstacles[i].x -= gameSpeed;
+    ctx.fillStyle = 'red';
+    ctx.fillRect(obstacles[i].x, 160, obstacles[i].width, obstacles[i].height);
+
+    // Collision check
+    if (
+      player.x < obstacles[i].x + obstacles[i].width &&
+      player.x + player.width > obstacles[i].x &&
+      player.y + player.height > 160
+    ) {
+      gameOver = true;
+    }
+
+    // Score update
+    if (obstacles[i].x + obstacles[i].width < 0) {
+      obstacles.splice(i, 1);
+      score++;
+    }
+  }
+
+  if (gameOver) {
+    ctx.font = "20px Arial";
+    ctx.fillStyle = "black";
+    ctx.fillText("Game Over! Refresh to try again.", 150, 100);
+    return;
+  }
+
+  if (score >= maxScore) {
+    document.getElementById('message').style.display = 'block';
+    return;
+  }
+
+  requestAnimationFrame(update);
+}
+
+update();
+</script>
+</body>
+</html>
